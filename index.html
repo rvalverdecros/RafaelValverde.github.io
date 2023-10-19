@@ -1,0 +1,131 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Bastionar el arranque de un sistema Debian a mi eleccion</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="bastionar-arranque-debian-rvc"
+                  title="Bastionar el arranque de un sistema Debian a mi eleccion"
+                  environment="web"
+                  feedback-link="">
+    
+      <google-codelab-step label="Modificar contraseña al entrar al Grub" duration="10">
+        <h2 is-upgraded>Requisitos</h2>
+<p>Solo hace falta tener instalado una maquina virtual de Debian con GRUB instalado.</p>
+<h2 is-upgraded>Guia</h2>
+<p>Hay muchos tipos de bastionado de arranque. Aqui vamos a empezar con algunos de ellos</p>
+<h3 is-upgraded>Proteger el arranque con contraseña</h3>
+<p>Podemos proteger el arranque del Grub, con contraseña, para eso tenemos que editar un archivo. Este archivo hace falta que seamos root, por lo que ponemos en la terminal <em>su</em></p>
+<p class="image-container"><img alt="Alt text" src="img\\5d8ddd3ea48eb111.png"></p>
+<p>Tras esto, tenemos permisos de superusuario, podemos entrar al archivo con:</p>
+<ul>
+<li>sudo nano /etc/grub.d/40_custom</li>
+</ul>
+<p class="image-container"><img alt="Alt text" src="img\\8bcf93b4ecaddb91.PNG"></p>
+<p>En este caso tenemos que poner:</p>
+<ul>
+<li>set superusers=&#34;root&#34;</li>
+<li>password root CONTRASEÑA</li>
+</ul>
+<p>En el final del arhivo y ahora, hay que actualizar el grub. Guardamos los cambios y en el terminal ponemos:</p>
+<ul>
+<li>sudo update-grub</li>
+</ul>
+<p class="image-container"><img alt="Alt text" src="img\\788bee77469634d8.png"></p>
+<p>Y ya si queremos mejorar mas la seguridad, podemos cifrar la contraseña, para eso vamos a usar el comando:</p>
+<ul>
+<li>sudo grub-mkpasswd-pbkdf2</li>
+</ul>
+<p>Con eso nos dará un hash, y ese hash hay que ponerlo en el fichero donde pusimos la anterior contraseña en: /etc/grub.d/40_custom.</p>
+<p class="image-container"><img alt="Alt text" src="img\\a20e637cda9b2fd4.png"></p>
+<p>Con esto tambien podemos editar los permisos para que solo el root pueda editarlo, y podemos hacerlo con este comando:</p>
+<ul>
+<li>sudo chmod 700 /etc/grub.d/40_custom</li>
+</ul>
+<p>Y ahora si actualizamos con:</p>
+<ul>
+<li>sudo update-grub</li>
+</ul>
+<p>Y reiniciamos el equipo y con esto podemos ver que cada vez que iniciamos sesion nos pide un usuario y contraseña:</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Modificar tiempo para acceder al Grub" duration="5">
+        <h2 is-upgraded>Guia</h2>
+<p>En la propia consola si ponemos, ya dentro de la opcion <em>su</em></p>
+<ul>
+<li>sudo nano /etc/deafult/grub</li>
+</ul>
+<p>Podemos ver una opcion que pone Grub_Timeout = 5. Si cambiamos esa a 0, ya no se abira el Grub:</p>
+<p class="image-container"><img alt="Alt text" src="img\\a901a2af2f298a84.png"></p>
+<p>Y ya tras eso, si ponemos el comando de actualizar el Grub y reinciamos, podremos ver que el Grub no saldra al inicar el Debian, pero como nostros tenemos puesto la contraseña, solo aparecera la opcion de poner contraseña y ya.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Copias de Seguridad" duration="5">
+        <h2 is-upgraded>Guia</h2>
+<h3 is-upgraded>Primer Metodo</h3>
+<p>Si queremos copiar el archivo de configruacion del grub, tenemos que ir a nuestro cmd y tener permisos de administrador <em>su</em></p>
+<p>Tras eso, hagamos el caso de que, por ejemplo, el disco que posee GRUB es /dev/sda y la copia que vamos a hacer en el directorio de trabajo se llame grub.backup. Asi sería el comando:</p>
+<ul>
+<li>dd if=/dev/sda of=grub.backup bs=512 count=2048</li>
+</ul>
+<p>Pero en el caso de que si queremos restaurar la copia de seguridad sobre el mismo disco, el comando sería:</p>
+<ul>
+<li>dd if=grub.backup of=/dev/sda bs=512 count=2048</li>
+</ul>
+<p>Y ya con eso, conectamos el USB y ponemos el archivo generado dentro del USB.</p>
+<h3 is-upgraded>Segundo Metodo</h3>
+<p>El segundo metodo es hacer una carpeta , con la que vamos a usar para hacer la copia de seguridad:</p>
+<ul>
+<li>mkdir -p ~/grub-backup</li>
+</ul>
+<p>Despues de eso tenemos que hacer una copia el archivo de configruacion del GRUB y debemos hacerlo con este comando:</p>
+<ul>
+<li>cp /etc/default/grub ~/grub-backup/</li>
+</ul>
+<p>Tras eso, hay que copiar las entradas del Cragador de arranque del GRUB que se encuentyra en /etc/grub.d/ utilizando  el comando:</p>
+<ul>
+<li>sudo cp -R /etc/grub.d/ ~/grub-backup/</li>
+</ul>
+<p>TRas eso conectamos un pendrive y ponemos la carpeta donde esta todo el grub.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Conclusiones" duration="1">
+        <p>Hay muchos metodos para proteger cualquier maquina de Debian, para hacer que ninguna persona pueda entrar. A parte de tener muchas herramientas con las que puedes asegurar copias de tu GRUB si se pierden en un futuro.</p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
